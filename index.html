@@ -639,17 +639,8 @@
         </div>
         <div id="map"></div>
       </div>
-      <div class="legend-row">
-        <div class="legend-item"><span class="legend-dot" style="background:#e74c3c"></span> Southern California</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#e67e22"></span> Mexico</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#2ecc71"></span> Philippines</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#9b59b6"></span> Bali</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#3498db"></span> Monterey Bay</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#1abc9c"></span> Thailand</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#f1c40f"></span> Tioman</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#e84393"></span> Maldives</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#00cec9"></span> Japan</div>
-      </div>
+      <!-- Built from the trips actually on the map, so it cannot go stale. -->
+      <div class="legend-row" id="mapLegend"></div>
     </div>
 
     <div class="chart-card full-width">
@@ -945,7 +936,22 @@ const regionColors = {
   'tioman': '#f1c40f',
   'maldives': '#e84393',
   'japan': '#00cec9',
+  'norcal': '#95a5a6',
   'other': '#e3ab4d'
+};
+
+const regionLabels = {
+  'socal': 'Southern California',
+  'mexico': 'Mexico',
+  'philippines': 'Philippines',
+  'bali': 'Bali',
+  'monterey': 'Monterey Bay',
+  'norcal': 'Northern California',
+  'thailand': 'Thailand',
+  'tioman': 'Tioman',
+  'maldives': 'Maldives',
+  'japan': 'Japan',
+  'other': 'Other'
 };
 
 function getRegion(lat, lon) {
@@ -958,6 +964,7 @@ function getRegion(lat, lon) {
   if (lat > 2 && lat < 3 && lon > 104 && lon < 105) return 'tioman';
   if (lat > 0 && lat < 8 && lon > 72 && lon < 74) return 'maldives';
   if (lat > 24 && lat < 46 && lon > 122 && lon < 146) return 'japan';
+  if (lat > 37.5 && lat < 42 && lon > -125 && lon < -122) return 'norcal';
   return 'other';
 }
 
@@ -1013,6 +1020,24 @@ tripGroups.forEach((group, name) => {
 });
 markers.addTo(map);
 if (markers.getLayers().length > 0) map.fitBounds(markers.getBounds().pad(0.15));
+
+// Legend lists only the regions actually plotted, busiest first.
+(function() {
+  const counts = {};
+  tripGroups.forEach(group => {
+    const lat = group.reduce((s, d) => s + d.lat, 0) / group.length;
+    const lon = group.reduce((s, d) => s + d.lon, 0) / group.length;
+    const r = getRegion(lat, lon);
+    counts[r] = (counts[r] || 0) + group.length;
+  });
+  const el = document.getElementById('mapLegend');
+  if (!el) return;
+  el.innerHTML = Object.keys(counts)
+    .sort((a, b) => counts[b] - counts[a])
+    .map(r => `<div class="legend-item"><span class="legend-dot" style="background:` +
+              `${regionColors[r]}"></span> ${regionLabels[r] || r} (${counts[r]})</div>`)
+    .join('');
+})();
 
 // --- Dive Profile ---
 let profileChart = null;

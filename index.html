@@ -168,6 +168,12 @@
     margin-bottom: 16px;
     font-weight: 600;
   }
+  .chart-note {
+    font-size: 0.78rem;
+    color: rgba(244,237,216,0.55);
+    margin: -10px 0 14px;
+    line-height: 1.4;
+  }
   .chart-container {
     position: relative;
     height: 300px;
@@ -657,6 +663,7 @@
 
     <div class="chart-card full-width">
       <h3>Weight by Setup (kg)</h3>
+      <p class="chart-note">Grouped by exposure protection. Salt water unless noted &middot; hover a bar for the exact suit configurations.</p>
       <div class="chart-container"><canvas id="weightChart"></canvas></div>
     </div>
 
@@ -687,7 +694,7 @@ const dives = [{"number": 1, "date": "2023-11-30", "time": "14:47:12", "duration
 const stats = {"total_dives": 127, "total_time_hrs": 99.9, "max_depth": 35.4, "avg_temp": 21.3, "coldest_temp": 9.9, "warmest_temp": 30.0, "avg_duration": 47.2, "avg_sac": 13.9, "first_dive": "2023-11-30", "last_dive": "2026-08-18", "trip_counts": {"Thailand Krabi OW": 4, "LA": 7, "Los Cabos AOW": 5, "Monterey Local": 39, "PG": 17, "Tulum": 8, "Bali": 9, "Tioman": 6, "Maldive": 18, "San Diego": 2, "Mendocino": 2, "Kagoshima": 8, "Mikimoto": 2}};
 const tripRatings = [["Tioman", 5.0], ["Mendocino", 5.0], ["Tulum", 4.62], ["PG", 4.59], ["Mikimoto", 4.5], ["Los Cabos AOW", 4.4], ["Monterey Local", 4.31], ["LA", 4.29], ["Kagoshima", 4.25], ["Thailand Krabi OW", 4.0], ["Bali", 4.0], ["San Diego", 4.0], ["Maldive", 3.72]];
 const topBuddies = [["Yilin Ma", 18], ["Tongtong", 18], ["Rusty", 17], ["Rui Shi", 15], ["Siyu", 9]];
-const weightBoxplot = [{"label": "thermocline / Salt", "min": 0, "median": 0.5, "max": 3.0, "n": 12}, {"label": "Thermocline + 5mm Wetsuit / Salt", "min": 2.0, "median": 2.5, "max": 3.0, "n": 2}, {"label": "Drysuit+Vest - Double HP100 / Salt", "min": 2.7, "median": 2.7, "max": 2.7, "n": 1}, {"label": "rashguard / Salt", "min": 1.8, "median": 3.0, "max": 3.0, "n": 27}, {"label": "3mm shorty / Salt", "min": 4.0, "median": 4.0, "max": 4.0, "n": 4}, {"label": "3mm / Salt", "min": 3.6, "median": 4.0, "max": 5.4, "n": 16}, {"label": "5mm / Fresh", "min": 4.5, "median": 4.5, "max": 4.5, "n": 6}, {"label": "5mm / Salt", "min": 5.0, "median": 5.0, "max": 5.0, "n": 5}, {"label": "Drysuit - Double LP50 / Salt", "min": 5.4, "median": 5.4, "max": 5.4, "n": 1}, {"label": "Drysuit+Vest - Double LP72 / Salt", "min": 5.4, "median": 5.4, "max": 5.4, "n": 1}, {"label": "7mm + 5mm hooded vest / Salt", "min": 5.4, "median": 5.9, "max": 7.3, "n": 22}, {"label": "7mm / Salt", "min": 6.3, "median": 6.3, "max": 8.2, "n": 4}, {"label": "5mm+3mm shorty / Salt", "min": 6.3, "median": 6.3, "max": 6.3, "n": 5}, {"label": "7mm + 5mm hooded vest + 2mm thermocline / Salt", "min": 6.3, "median": 6.3, "max": 6.3, "n": 2}, {"label": "Drysuit+Vest / Salt", "min": 7.3, "median": 7.7, "max": 9.1, "n": 6}, {"label": "Drysuit / Salt", "min": 7.3, "median": 8.2, "max": 10.4, "n": 13}];
+const weightBoxplot = [{"label": "Rashguard", "min": 1.8, "median": 3.0, "max": 3.0, "n": 27, "configs": ["rashguard (21)", "rashguard + techpant (6)"]}, {"label": "Thermocline", "min": 0, "median": 1.5, "max": 3.0, "n": 14, "configs": ["thermocline (12)", "Thermocline + 5mm Wetsuit (2)"]}, {"label": "3mm", "min": 3.6, "median": 4.0, "max": 5.4, "n": 20, "configs": ["3mm (16)", "3mm shorty (4)"]}, {"label": "5mm (fresh)", "min": 4.5, "median": 4.5, "max": 4.5, "n": 6, "configs": ["5mm (6)"]}, {"label": "5mm", "min": 5.0, "median": 5.7, "max": 6.3, "n": 10, "configs": ["5mm+3mm shorty (5)", "5mm (5)"]}, {"label": "7mm", "min": 5.4, "median": 6.3, "max": 8.2, "n": 28, "configs": ["7mm + 5mm hooded vest (22)", "7mm (4)", "7mm + 5mm hooded vest + 2mm thermocline (2)"]}, {"label": "Drysuit", "min": 7.3, "median": 8.2, "max": 10.4, "n": 19, "configs": ["Drysuit (13)", "Drysuit+Vest (6)"]}, {"label": "Drysuit + doubles", "min": 2.7, "median": 5.4, "max": 5.4, "n": 3, "configs": ["Drysuit - Double LP50 (1)", "Drysuit+Vest - Double LP72 (1)", "Drysuit+Vest - Double HP100 (1)"]}];
 
 Chart.defaults.color = '#93b3a2';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
@@ -815,7 +822,12 @@ new Chart(document.getElementById('sacChart'), {
             },
             label: (item) => {
               const w = weightBoxplot[item.dataIndex];
-              return [`Min: ${w.min} kg`, `Median: ${w.median} kg`, `Max: ${w.max} kg`];
+              const lines = [`Min: ${w.min} kg`, `Median: ${w.median} kg`, `Max: ${w.max} kg`];
+              if (w.configs && w.configs.length) {
+                lines.push('', 'Configurations:');
+                w.configs.forEach(c => lines.push('  ' + c));
+              }
+              return lines;
             }
           }
         }

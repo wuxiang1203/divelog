@@ -977,10 +977,6 @@ tripGroups.forEach((group, name) => {
   const lat = group.reduce((s, d) => s + d.lat, 0) / group.length;
   const lon = group.reduce((s, d) => s + d.lon, 0) / group.length;
   const color = regionColors[getRegion(lat, lon)];
-  // Area scales with dive count, but capped so a 27-dive trip does not
-  // swallow the 2-dive ones next to it.
-  const radius = Math.min(20, 6 + Math.sqrt(group.length) * 2.4);
-
   const dates = group.map(d => d.date).filter(Boolean).sort();
   const span = dates.length
     ? (dates[0] === dates[dates.length - 1] ? dates[0]
@@ -993,7 +989,7 @@ tripGroups.forEach((group, name) => {
   const siteNames = [...new Set(group.map(d => d.site).filter(Boolean))];
 
   const marker = L.circleMarker([lat, lon], {
-    radius: radius,
+    radius: 8,
     fillColor: color,
     color: '#fff',
     weight: 1.5,

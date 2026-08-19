@@ -795,6 +795,10 @@ new Chart(document.getElementById('sacChart'), {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
+      // Setups where every dive used the same weight (n=1, or n>1 all equal)
+      // render as a zero-width bar, which has no hit area of its own. Match on
+      // row position instead of bar geometry so those rows get a tooltip too.
+      interaction: { mode: 'index', axis: 'y', intersect: false },
       plugins: {
         legend: {
           display: true, position: 'top',
@@ -814,7 +818,10 @@ new Chart(document.getElementById('sacChart'), {
             },
             label: (item) => {
               const w = weightBoxplot[item.dataIndex];
-              const lines = [`Min: ${w.min} kg`, `Median: ${w.median} kg`, `Max: ${w.max} kg`];
+              // No spread to report -- three identical lines would just be noise.
+              const lines = w.min === w.max
+                ? [`Weight: ${w.median} kg`]
+                : [`Min: ${w.min} kg`, `Median: ${w.median} kg`, `Max: ${w.max} kg`];
               if (w.configs && w.configs.length) {
                 lines.push('', 'Configurations:');
                 w.configs.forEach(c => lines.push('  ' + c));

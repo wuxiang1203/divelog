@@ -928,9 +928,21 @@ new Chart(document.getElementById('progressChart'), {
 
 // --- Map ---
 const map = L.map('map').setView([10, 50], 2);
-L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; OpenStreetMap &copy; CARTO',
-  maxZoom: 19
+// CARTO's dark_all basemap stopped serving anonymous traffic in Sept 2026 and
+// now stamps "API KEY REQUIRED" across every tile, so the map is on Esri's
+// keyless Dark Gray Canvas instead. Note the {z}/{y}/{x} order -- ArcGIS
+// puts row before column, the reverse of the usual XYZ scheme.
+// Esri splits labels into a separate overlay; the base layer alone has none.
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: '&copy; Esri',
+  maxZoom: 19,
+  // Past z16 Esri returns a light-gray "Map data not yet available" placeholder
+  // that wrecks the dark theme, so upscale the z16 tile instead of asking.
+  maxNativeZoom: 16
+}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom: 19,
+  maxNativeZoom: 16
 }).addTo(map);
 
 const regionColors = {
